@@ -5,6 +5,7 @@ import (
 	"log"
 	"fmt"
 	"bufio"
+	"sort"
 )
 
 type TopicItem struct {
@@ -40,50 +41,20 @@ func main()  {
 	fmt.Println(fmt.Sprintf("total logs=%v, uniques=%v", totalLogs, len(uniques)))
 
 	// 部分排序算法，数据移动量比较大，考虑用根堆
-	topArray := []*TopicItem{
-		&TopicItem{}, &TopicItem{},&TopicItem{},&TopicItem{},&TopicItem{},
-		&TopicItem{}, &TopicItem{},&TopicItem{},&TopicItem{},&TopicItem{},
-	}
+	topArray := []TopicItem{}
+
 	for topic, count := range uniques {
-		item := &TopicItem{topic: topic, count: count}
-		needInsert := false
-		insertPos := 0
-
-		if len(topArray) == 0 {
-			topArray = append(topArray, item)
-			continue
+		item := TopicItem{topic: topic, count: count}
+		topArray = append(topArray, item)
+		sort.Slice(topArray, func(i, j int) bool {
+			return topArray[i].count > topArray[j].count
+		})
+		if len(topArray) > 10 {
+			topArray = topArray[0:10]
 		}
-
-		for k, item := range topArray {
-			if count >= item.count {
-				needInsert = true
-				insertPos = k
-				break
-			}
-		}
-		if !needInsert {
-			continue
-		}
-
-		tmpArray := []*TopicItem{}
-		if insertPos == 0 {
-			tmpArray = append(tmpArray, item)
-			tmpArray = append(tmpArray, topArray[0:]...)
-		} else {
-			tmpArray = append(tmpArray, topArray[0: insertPos]...)
-			tmpArray = append(tmpArray, item)
-			tmpArray = append(tmpArray, topArray[insertPos:]...)
-		}
-		end := len(tmpArray)
-		if end > 10 {
-			end = 10
-		}
-		topArray = tmpArray[0:end]
 	}
 
 	for k, item := range topArray {
 		fmt.Println("final top ", k, item.topic, item.count)
 	}
-
-	//heap
 }
